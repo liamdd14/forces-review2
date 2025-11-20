@@ -1,0 +1,990 @@
+<!doctype html>
+<html lang="en">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Forces Physics Quiz</title>
+  <script src="/_sdk/element_sdk.js"></script>
+  <style>
+    body {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    html {
+      height: 100%;
+    }
+
+    .container {
+      width: 90%;
+      max-width: 700px;
+      background: white;
+      border-radius: 20px;
+      padding: 40px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    }
+
+    .start-screen, .quiz-screen, .results-screen {
+      text-align: center;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    h1 {
+      color: #667eea;
+      margin-bottom: 10px;
+      font-size: 42px;
+    }
+
+    .subtitle {
+      color: #666;
+      margin-bottom: 30px;
+      font-size: 18px;
+    }
+
+    .start-button, .next-button, .retry-button {
+      background: #667eea;
+      color: white;
+      border: none;
+      padding: 15px 40px;
+      font-size: 18px;
+      border-radius: 30px;
+      cursor: pointer;
+      transition: all 0.3s;
+      font-weight: 600;
+    }
+
+    .start-button:hover, .next-button:hover, .retry-button:hover {
+      background: #5568d3;
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+    }
+
+    .progress-bar {
+      width: 100%;
+      height: 8px;
+      background: #e0e0e0;
+      border-radius: 10px;
+      margin-bottom: 30px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #667eea, #764ba2);
+      transition: width 0.3s;
+      border-radius: 10px;
+    }
+
+    .question-number {
+      color: #764ba2;
+      font-weight: 600;
+      margin-bottom: 20px;
+      font-size: 16px;
+    }
+
+    .question-text {
+      color: #333;
+      font-size: 22px;
+      margin-bottom: 30px;
+      line-height: 1.5;
+      font-weight: 500;
+    }
+
+    .options {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      margin-bottom: 30px;
+    }
+
+    .option {
+      background: #f5f5f5;
+      padding: 18px;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.3s;
+      border: 3px solid transparent;
+      text-align: left;
+      font-size: 16px;
+    }
+
+    .option:hover {
+      background: #ebebeb;
+      transform: translateX(5px);
+    }
+
+    .option.selected {
+      border-color: #667eea;
+      background: #e8ecff;
+    }
+
+    .option.correct {
+      border-color: #4caf50;
+      background: #e8f5e9;
+    }
+
+    .option.incorrect {
+      border-color: #f44336;
+      background: #ffebee;
+    }
+
+    .feedback {
+      margin-top: 20px;
+      padding: 15px;
+      border-radius: 10px;
+      font-size: 16px;
+      line-height: 1.6;
+    }
+
+    .feedback.correct {
+      background: #e8f5e9;
+      color: #2e7d32;
+    }
+
+    .feedback.incorrect {
+      background: #ffebee;
+      color: #c62828;
+    }
+
+    .next-button {
+      margin-top: 20px;
+    }
+
+    .next-button:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+
+    .next-button:disabled:hover {
+      transform: none;
+      box-shadow: none;
+    }
+
+    .score-display {
+      font-size: 72px;
+      font-weight: bold;
+      color: #667eea;
+      margin: 30px 0;
+    }
+
+    .score-message {
+      font-size: 24px;
+      color: #333;
+      margin-bottom: 30px;
+    }
+
+    .results-details {
+      text-align: left;
+      background: #f5f5f5;
+      padding: 20px;
+      border-radius: 12px;
+      margin: 20px 0;
+    }
+
+    .results-details p {
+      margin: 10px 0;
+      font-size: 16px;
+      color: #555;
+    }
+  </style>
+  <style>@view-transition { navigation: auto; }</style>
+  <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
+  <script src="https://cdn.tailwindcss.com" type="text/javascript"></script>
+ </head>
+ <body>
+  <div class="container">
+   <div id="startScreen" class="start-screen">
+    <h1 id="quizTitle">Forces Physics Quiz</h1>
+    <p id="subtitle" class="subtitle">Test your understanding of gravity, normal force, tension, springs, and friction!</p><button id="startButton" class="start-button">Start Quiz</button>
+   </div>
+   <div id="quizScreen" class="quiz-screen hidden">
+    <div class="progress-bar">
+     <div id="progressFill" class="progress-fill"></div>
+    </div>
+    <div id="questionNumber" class="question-number"></div>
+    <div id="questionText" class="question-text"></div>
+    <div id="options" class="options"></div>
+    <div id="feedback" class="feedback hidden"></div><button id="nextButton" class="next-button hidden">Next Question</button>
+   </div>
+   <div id="resultsScreen" class="results-screen hidden">
+    <h1 id="resultsTitle">Quiz Complete!</h1>
+    <div id="scoreDisplay" class="score-display"></div>
+    <div id="scoreMessage" class="score-message"></div>
+    <div class="results-details">
+     <p><strong>Correct Answers:</strong> <span id="correctCount"></span></p>
+     <p><strong>Incorrect Answers:</strong> <span id="incorrectCount"></span></p>
+     <p><strong>Total Questions:</strong> <span id="totalCount"></span></p>
+    </div><button id="retryButton" class="retry-button">Try Again</button>
+   </div>
+  </div>
+  <script>
+    const defaultConfig = {
+      quiz_title: "Forces Physics Quiz",
+      subtitle: "Test your understanding of gravity, normal force, tension, springs, and friction!",
+      start_button_text: "Start Quiz",
+      next_button_text: "Next Question",
+      results_title: "Quiz Complete!",
+      retry_button_text: "Try Again",
+      primary_color: "#667eea",
+      secondary_color: "#764ba2",
+      background_color: "#ffffff",
+      text_color: "#333333",
+      accent_color: "#f5f5f5"
+    };
+
+    const questions = [
+      {
+        question: "A book rests on a table. Which statement is true about the forces acting on the book?",
+        options: [
+          "Gravity pulls down, and the table pushes up with an equal normal force",
+          "Gravity pulls down stronger than the table pushes up",
+          "The table pushes up stronger than gravity pulls down",
+          "Only gravity acts on the book since it's not moving"
+        ],
+        correct: 0,
+        explanation: "When an object is at rest on a surface, the normal force from the surface equals the gravitational force, resulting in zero net force (equilibrium)."
+      },
+      {
+        question: "You're pulling a box across the floor at constant speed. What can you say about the friction force?",
+        options: [
+          "Friction is zero because the box is moving",
+          "Friction equals your pulling force",
+          "Friction is greater than your pulling force",
+          "Friction is less than your pulling force"
+        ],
+        correct: 1,
+        explanation: "At constant speed, there's no acceleration, so net force is zero. This means the friction force must equal your pulling force in magnitude but opposite in direction."
+      },
+      {
+        question: "A spring is compressed by 2 cm. If you compress it by 4 cm instead, how does the spring force change?",
+        options: [
+          "The force stays the same",
+          "The force doubles",
+          "The force quadruples",
+          "The force is cut in half"
+        ],
+        correct: 1,
+        explanation: "Spring force follows Hooke's Law (F = kx), which is linear. If you double the compression distance, the force doubles."
+      },
+      {
+        question: "Two boxes rest on a table: one weighs 5 kg and one weighs 10 kg. Which experiences a larger normal force?",
+        options: [
+          "The 5 kg box",
+          "The 10 kg box",
+          "They experience the same normal force",
+          "Neither experiences a normal force"
+        ],
+        correct: 1,
+        explanation: "The heavier box (10 kg) has more gravitational force pulling down, so the table must push up with a larger normal force to keep it in equilibrium."
+      },
+      {
+        question: "A picture hangs from the ceiling by a string. What provides the upward force that balances the picture's weight?",
+        options: [
+          "Normal force from the ceiling",
+          "Tension in the string",
+          "Air resistance",
+          "The picture's own momentum"
+        ],
+        correct: 1,
+        explanation: "The tension force in the string pulls upward on the picture, balancing the downward gravitational force and keeping the picture in equilibrium."
+      },
+      {
+        question: "You push a heavy box but it doesn't move. Which statement is correct?",
+        options: [
+          "There is no friction since the box isn't moving",
+          "Static friction equals your pushing force",
+          "Static friction is less than your pushing force",
+          "Kinetic friction is preventing motion"
+        ],
+        correct: 1,
+        explanation: "When the box doesn't move, static friction matches your pushing force exactly (up to its maximum limit). Kinetic friction only acts on moving objects."
+      },
+      {
+        question: "An elevator accelerates upward. How does the normal force on a person inside compare to their weight?",
+        options: [
+          "Normal force is less than weight",
+          "Normal force equals weight",
+          "Normal force is greater than weight",
+          "There is no normal force in an elevator"
+        ],
+        correct: 2,
+        explanation: "To accelerate upward, there must be a net upward force. The normal force from the floor must be greater than the person's weight to provide this upward acceleration."
+      },
+      {
+        question: "A stretched spring pulls a block toward it. If you increase the stretch distance, what happens to the acceleration of the block?",
+        options: [
+          "Acceleration decreases",
+          "Acceleration stays the same",
+          "Acceleration increases",
+          "Acceleration becomes zero"
+        ],
+        correct: 2,
+        explanation: "Greater stretch means greater spring force (F = kx). With more force and the same mass, acceleration increases (F = ma)."
+      },
+      {
+        question: "A spring with spring constant k is stretched by distance x. Another identical spring is stretched by distance 3x. How do the forces compare?",
+        options: [
+          "The second spring has 3 times the force",
+          "The second spring has 9 times the force",
+          "Both springs have the same force",
+          "The second spring has 1/3 the force"
+        ],
+        correct: 0,
+        explanation: "Spring force is proportional to stretch distance (F = kx). Triple the stretch means triple the force for the same spring constant."
+      },
+      {
+        question: "You drag a suitcase across a carpeted floor at constant velocity. What happens if you suddenly double your pulling force?",
+        options: [
+          "The suitcase continues at constant velocity",
+          "The suitcase accelerates forward",
+          "The suitcase decelerates",
+          "The suitcase stops moving"
+        ],
+        correct: 1,
+        explanation: "At constant velocity, your pull equals friction. Doubling your pull creates a net forward force (pull > friction), causing forward acceleration."
+      },
+      {
+        question: "A person stands in an elevator that moves upward at constant velocity. How does the normal force compare to their weight?",
+        options: [
+          "Normal force is greater than weight",
+          "Normal force equals weight",
+          "Normal force is less than weight",
+          "Normal force is zero"
+        ],
+        correct: 1,
+        explanation: "Constant velocity means zero acceleration and zero net force. The normal force must exactly equal the person's weight for equilibrium."
+      },
+      {
+        question: "Two identical boxes are stacked on top of each other on a table. How does the normal force from the table compare to the normal force on the box on top?",
+        options: [
+          "The same as the box on top",
+          "Twice as large as the box on top",
+          "Half as large as the box on top",
+          "Four times as large as the box on top"
+        ],
+        correct: 1,
+        explanation: "The table must support the weight of both boxes. The box on top only supports its own weight, but the table supports twice that weight, so the normal force doubles."
+      },
+      {
+        question: "A rope hangs from the ceiling with a 10 kg mass at the bottom. What is the tension in the rope where it connects to the ceiling?",
+        options: [
+          "Zero, because the mass pulls down not up",
+          "Equal to the weight of the 10 kg mass",
+          "Half the weight of the mass",
+          "Twice the weight of the mass"
+        ],
+        correct: 1,
+        explanation: "The rope must support the entire weight of the mass. The tension throughout the rope (including at the ceiling) equals the weight of the hanging mass."
+      },
+      {
+        question: "A compressed spring pushes two blocks apart. One block has twice the mass of the other. Which block experiences more force from the spring?",
+        options: [
+          "The heavier block",
+          "The lighter block",
+          "Both experience the same force",
+          "Neither experiences a force"
+        ],
+        correct: 2,
+        explanation: "The spring pushes on both blocks with equal force (Newton's third law - action and reaction). The lighter block will accelerate more, but the forces are equal."
+      },
+      {
+        question: "You push on a wall with 50 N of force. The wall doesn't move. What force does the wall exert on you?",
+        options: [
+          "0 N, because the wall doesn't move",
+          "25 N pushing back",
+          "50 N pushing back",
+          "100 N pushing back"
+        ],
+        correct: 2,
+        explanation: "Newton's third law: for every action there's an equal and opposite reaction. The wall pushes back on you with exactly 50 N."
+      },
+      {
+        question: "A book slides across a table and gradually slows down. What type of friction is acting on it?",
+        options: [
+          "Static friction",
+          "Kinetic friction",
+          "Rolling friction",
+          "No friction"
+        ],
+        correct: 1,
+        explanation: "Kinetic (sliding) friction acts on objects that are moving relative to a surface. This friction opposes motion and causes the book to slow down."
+      },
+      {
+        question: "An astronaut in space (far from any planets) pushes on a floating toolbox. What happens to the astronaut?",
+        options: [
+          "Nothing, the astronaut stays still",
+          "The astronaut moves in the same direction as the toolbox",
+          "The astronaut moves in the opposite direction to the toolbox",
+          "The astronaut spins in place"
+        ],
+        correct: 2,
+        explanation: "Newton's third law: when the astronaut pushes the toolbox, the toolbox pushes back equally. This causes the astronaut to move backward."
+      },
+      {
+        question: "A spring scale shows 20 N when you hang a mass from it. If you hang the same mass from two identical springs (one below the other), what does the top spring scale read?",
+        options: [
+          "10 N",
+          "20 N",
+          "40 N",
+          "0 N"
+        ],
+        correct: 1,
+        explanation: "The top spring must support the entire weight of the mass (plus the bottom spring's negligible weight). It still reads 20 N."
+      },
+      {
+        question: "A box sits on a frictionless surface. You push it horizontally. What happens when you stop pushing?",
+        options: [
+          "The box immediately stops",
+          "The box gradually slows down",
+          "The box continues at constant velocity",
+          "The box accelerates faster"
+        ],
+        correct: 2,
+        explanation: "With no friction and no applied force, there's no net force on the box. By Newton's first law, it continues moving at constant velocity."
+      },
+      {
+        question: "Static friction can be at most 40 N for a particular box on a floor. You push with 30 N but the box doesn't move. What is the friction force?",
+        options: [
+          "0 N",
+          "30 N",
+          "40 N",
+          "70 N"
+        ],
+        correct: 1,
+        explanation: "Static friction adjusts to match your push up to its maximum. Since the box doesn't move, static friction exactly equals your 30 N push."
+      },
+      {
+        question: "A 5 kg mass and a 10 kg mass hang from opposite ends of a rope over a pulley. Which experiences greater tension from the rope?",
+        options: [
+          "The 5 kg mass",
+          "The 10 kg mass",
+          "Both experience the same tension",
+          "Neither experiences tension"
+        ],
+        correct: 2,
+        explanation: "The tension in an ideal rope is the same throughout. Both masses feel the same tension force from the rope, even though their weights differ."
+      },
+      {
+        question: "You compress a spring by hand until it pushes back with 100 N. How hard are you pushing on the spring?",
+        options: [
+          "0 N",
+          "50 N",
+          "100 N",
+          "200 N"
+        ],
+        correct: 2,
+        explanation: "Newton's third law: the spring pushes on you with the same force you push on it. You must be pushing with 100 N for the spring to push back with 100 N."
+      },
+      {
+        question: "A horizontal rope pulls a sled forward with 50 N of tension. Friction pulls backward with 30 N. What is the net force on the sled?",
+        options: [
+          "20 N forward",
+          "20 N backward",
+          "80 N forward",
+          "0 N"
+        ],
+        correct: 0,
+        explanation: "Net force is the sum of all forces. 50 N forward minus 30 N backward equals 20 N forward. This net force causes acceleration."
+      },
+      {
+        question: "Two people pull on opposite ends of a rope in a tug-of-war. One pulls with 200 N, the other with 200 N. What is the tension in the rope?",
+        options: [
+          "0 N",
+          "200 N",
+          "400 N",
+          "100 N"
+        ],
+        correct: 1,
+        explanation: "Tension in the rope equals the pull from one person (either one), not both added together. The rope has 200 N of tension throughout."
+      },
+      {
+        question: "A spring is compressed and held in place. When released, it pushes a toy car forward. What happens to the spring force as the car moves away and the spring returns to its natural length?",
+        options: [
+          "The spring force increases",
+          "The spring force stays constant",
+          "The spring force decreases",
+          "The spring force reverses direction"
+        ],
+        correct: 2,
+        explanation: "As the spring returns to its natural length, the compression decreases. Since spring force is proportional to compression distance (F = kx), less compression means less force."
+      },
+      {
+        question: "A box is at rest on a table. You push down on the top of the box. What happens to the normal force from the table?",
+        options: [
+          "Decreases",
+          "Stays the same",
+          "Increases",
+          "Becomes zero"
+        ],
+        correct: 2,
+        explanation: "The table must now support both the box's weight and your downward push. The normal force increases to balance these downward forces."
+      },
+      {
+        question: "An elevator cable breaks and the elevator falls freely. What is the normal force on a person standing inside?",
+        options: [
+          "Equal to their weight",
+          "Greater than their weight",
+          "Less than their weight",
+          "Zero"
+        ],
+        correct: 3,
+        explanation: "In free fall, both the person and elevator accelerate downward at the same rate. There's no contact force between them, so normal force is zero (weightlessness)."
+      },
+      {
+        question: "You slide a book across a table. The kinetic friction is 5 N. If you place an identical book on top and slide both, what is the kinetic friction?",
+        options: [
+          "2.5 N",
+          "5 N",
+          "10 N",
+          "15 N"
+        ],
+        correct: 2,
+        explanation: "Kinetic friction is proportional to normal force. Double the weight means double the normal force and double the kinetic friction."
+      },
+      {
+        question: "A spring exerts 20 N of force when compressed by 4 cm. If you compress it by 2 cm instead, what force does it exert?",
+        options: [
+          "5 N",
+          "10 N",
+          "20 N",
+          "40 N"
+        ],
+        correct: 1,
+        explanation: "Spring force is proportional to compression distance (F = kx). Half the compression means half the force: 20 N ÷ 2 = 10 N."
+      },
+      {
+        question: "A car drives at constant speed on a straight highway. What is the net force on the car?",
+        options: [
+          "Large, in the forward direction",
+          "Small, in the forward direction",
+          "Zero",
+          "Large, in the backward direction"
+        ],
+        correct: 2,
+        explanation: "Constant velocity means no acceleration. By Newton's second law (F = ma), zero acceleration means zero net force. Engine force equals drag and friction."
+      },
+      {
+        question: "A heavy crate sits on a warehouse floor. The maximum static friction is 500 N. You push with 400 N but it doesn't move. What is the actual static friction?",
+        options: [
+          "0 N",
+          "100 N",
+          "400 N",
+          "500 N"
+        ],
+        correct: 2,
+        explanation: "Static friction adjusts to prevent motion, matching applied forces up to its maximum. The crate doesn't move, so friction exactly equals your 400 N push."
+      },
+      {
+        question: "A spring is neither stretched nor compressed. You push on one end while someone else pulls on the other end with equal force. What is the net force on the spring?",
+        options: [
+          "Zero, because the forces cancel",
+          "Equal to one person's force",
+          "Equal to twice one person's force",
+          "The spring cannot experience balanced forces"
+        ],
+        correct: 0,
+        explanation: "The push and pull are equal and opposite, so they cancel. The net force on the spring is zero, keeping it in equilibrium (though it may compress or stretch)."
+      },
+      {
+        question: "A block accelerates to the right across a frictionless table. What is the direction of the net force?",
+        options: [
+          "To the left",
+          "To the right",
+          "Upward",
+          "Downward"
+        ],
+        correct: 1,
+        explanation: "By Newton's second law, net force and acceleration are always in the same direction. Since it accelerates right, the net force is to the right."
+      },
+      {
+        question: "You hang a 2 kg mass from a spring and it stretches 10 cm. If you hang a 4 kg mass from the same spring, how much does it stretch?",
+        options: [
+          "5 cm",
+          "10 cm",
+          "20 cm",
+          "40 cm"
+        ],
+        correct: 2,
+        explanation: "Spring stretch is proportional to the force applied (Hooke's Law: F = kx). Double the mass means double the weight and double the stretch."
+      },
+      {
+        question: "A rope pulls a box to the right across a rough floor at constant velocity. Which force is larger: tension or friction?",
+        options: [
+          "Tension is larger",
+          "Friction is larger",
+          "They are equal",
+          "It depends on the mass"
+        ],
+        correct: 2,
+        explanation: "Constant velocity means zero acceleration and zero net force. Tension and friction must be equal in magnitude for the forces to balance."
+      },
+      {
+        question: "An elevator accelerates downward. How does the normal force on a person inside compare to their weight?",
+        options: [
+          "Normal force is greater than weight",
+          "Normal force equals weight",
+          "Normal force is less than weight",
+          "Normal force is zero"
+        ],
+        correct: 2,
+        explanation: "Downward acceleration requires a net downward force. Weight pulls down more than normal force pushes up, creating the needed net downward force."
+      },
+      {
+        question: "A 50 N weight hangs from a rope attached to the ceiling. What is the tension in the rope?",
+        options: [
+          "0 N",
+          "25 N",
+          "50 N",
+          "100 N"
+        ],
+        correct: 2,
+        explanation: "The rope must support the weight. At equilibrium, the tension in the rope equals the weight of the object: 50 N."
+      },
+      {
+        question: "A box is pushed across a surface with gradually increasing force. The box starts to move when you reach 60 N. What is the maximum static friction?",
+        options: [
+          "30 N",
+          "60 N",
+          "120 N",
+          "Cannot be determined"
+        ],
+        correct: 1,
+        explanation: "The box starts moving when your push exceeds the maximum static friction. At the moment it starts moving, your push equals maximum static friction: 60 N."
+      },
+      {
+        question: "What is the main difference between mass and weight?",
+        options: [
+          "Mass is measured in pounds, weight is measured in kilograms",
+          "Mass is the amount of matter in an object, weight is the gravitational force on that mass",
+          "Mass changes with location, weight stays constant",
+          "Mass and weight are the same thing"
+        ],
+        correct: 1,
+        explanation: "Mass is a measure of how much matter an object contains and doesn't change with location. Weight is the gravitational force acting on that mass (W = mg) and varies depending on the strength of gravity."
+      },
+      {
+        question: "When a child reaches the top of a swing, the chain loses all tension. What is the total force on the child at this point?",
+        options: [
+          "Downward and equal to the child's weight",
+          "The child stops so there is no force",
+          "Downward and equal to the child's mass",
+          "Upward and equal to the tension minus the weight"
+        ],
+        correct: 0,
+        explanation: "Rope A must support both the object's weight AND rope B's weight. Rope B only supports the object's weight. Therefore, rope A has greater tension."
+      },
+      {
+        question: "A compressed spring pushes a block across a frictionless surface. Once the block leaves the spring, what happens to its speed?",
+        options: [
+          "It decreases",
+          "It stays constant",
+          "It increases",
+          "It drops to zero"
+        ],
+        correct: 1,
+        explanation: "On a frictionless surface with no forces acting, the block maintains constant velocity (Newton's first law). No force means no acceleration."
+      },
+      {
+        question: "You pull a box to the right with 100 N. Friction pulls left with 60 N. What is the direction and relative size of the box's acceleration?",
+        options: [
+          "Large acceleration to the right",
+          "Small acceleration to the right",
+          "Large acceleration to the left",
+          "Zero acceleration"
+        ],
+        correct: 1,
+        explanation: "Net force = 100 - 60 = 40 N to the right. The net force is positive but relatively small compared to the applied force, producing a small acceleration to the right."
+      },
+      {
+        question: "A soccer ball sits on the ground. You kick it horizontally. During the brief moment your foot is in contact with the ball, which force is larger?",
+        options: [
+          "The force of your foot on the ball",
+          "The force of the ball on your foot",
+          "Both forces are equal",
+          "Neither exerts a force"
+        ],
+        correct: 2,
+        explanation: "Newton's third law states that action and reaction forces are always equal in magnitude, even during collisions. The forces are equal, but the ball accelerates more because it has less mass."
+      },
+      {
+        question: "A truck pushes a car forward, accelerating both vehicles. How does the force of the truck on the car compare to the force of the car on the truck?",
+        options: [
+          "Truck exerts more force on the car",
+          "Car exerts more force on the truck",
+          "Both exert equal forces on each other",
+          "Neither exerts force on the other"
+        ],
+        correct: 2,
+        explanation: "Newton's third law always applies: action and reaction forces are equal and opposite. The truck pushes the car with the same force the car pushes the truck."
+      },
+      {
+        question: "A book rests on a table that rests on the floor. What is the normal force from the floor on the table?",
+        options: [
+          "Equal to the book's weight only",
+          "Equal to the table's weight only",
+          "Equal to the combined weight of book and table",
+          "Zero, because the table is supported by the floor"
+        ],
+        correct: 2,
+        explanation: "The floor must support everything above it. The normal force from the floor equals the total weight of both the table and the book."
+      },
+      {
+        question: "Two students pull on a rope in opposite directions during tug-of-war, each with 300 N of force. The rope doesn't move. What is the tension in the middle of the rope?",
+        options: [
+          "0 N, because the forces cancel",
+          "150 N",
+          "300 N",
+          "600 N"
+        ],
+        correct: 2,
+        explanation: "Tension throughout a rope is constant. Each student creates 300 N of tension. The rope doesn't snap because it can handle this tension, not because the forces cancel."
+      },
+      {
+        question: "A box sits on a table. What is the Newton's third law pair to the normal force the table exerts on the box?",
+        options: [
+          "The weight of the box",
+          "The normal force the floor exerts on the table",
+          "The normal force the box exerts on the table",
+          "Friction between the box and table"
+        ],
+        correct: 2,
+        explanation: "Newton's third law pairs are the same type of force between the same two objects in opposite directions. The box pushes down on the table (reaction to table's upward normal force)."
+      },
+      {
+        question: "Two identical boxes connected by a rope are pulled across a frictionless floor. If you pull the front box, how does the tension in the connecting rope compare to your pulling force?",
+        options: [
+          "Tension equals your pulling force",
+          "Tension is greater than your pulling force",
+          "Tension is less than your pulling force",
+          "Tension is zero because there's no friction"
+        ],
+        correct: 2,
+        explanation: "The rope only needs to accelerate the rear box. Your pulling force must accelerate both boxes. Therefore, the rope tension is less than your pulling force."
+      },
+      {
+        question: "A spring is attached to a wall at one end. You pull the other end horizontally. What force does the wall exert on the spring?",
+        options: [
+          "Zero, because the wall doesn't move",
+          "Half the force you pull with",
+          "Equal to the force you pull with",
+          "Twice the force you pull with"
+        ],
+        correct: 2,
+        explanation: "The spring is in equilibrium (not accelerating). The wall must pull on the spring with the same force you pull, keeping the net force zero on the spring."
+      },
+      {
+        question: "A person stands on a bathroom scale in an elevator moving upward at constant speed. What does the scale read compared to when the elevator is at rest?",
+        options: [
+          "Less than at rest",
+          "The same as at rest",
+          "More than at rest",
+          "Zero"
+        ],
+        correct: 1,
+        explanation: "Constant speed means no acceleration and no net force. The normal force (scale reading) equals the person's weight, same as when at rest."
+      }
+    ];
+
+    let currentQuestion = 0;
+    let score = 0;
+    let answered = false;
+
+    const startScreen = document.getElementById('startScreen');
+    const quizScreen = document.getElementById('quizScreen');
+    const resultsScreen = document.getElementById('resultsScreen');
+    const startButton = document.getElementById('startButton');
+    const nextButton = document.getElementById('nextButton');
+    const retryButton = document.getElementById('retryButton');
+
+    async function onConfigChange(config) {
+      document.getElementById('quizTitle').textContent = config.quiz_title || defaultConfig.quiz_title;
+      document.getElementById('subtitle').textContent = config.subtitle || defaultConfig.subtitle;
+      document.getElementById('startButton').textContent = config.start_button_text || defaultConfig.start_button_text;
+      document.getElementById('nextButton').textContent = config.next_button_text || defaultConfig.next_button_text;
+      document.getElementById('resultsTitle').textContent = config.results_title || defaultConfig.results_title;
+      document.getElementById('retryButton').textContent = config.retry_button_text || defaultConfig.retry_button_text;
+
+      const primaryColor = config.primary_color || defaultConfig.primary_color;
+      const secondaryColor = config.secondary_color || defaultConfig.secondary_color;
+      const backgroundColor = config.background_color || defaultConfig.background_color;
+      const textColor = config.text_color || defaultConfig.text_color;
+
+      document.body.style.background = `linear-gradient(135deg, ${primaryColor} 0%, ${secondaryColor} 100%)`;
+      document.querySelector('.container').style.background = backgroundColor;
+      document.querySelector('h1').style.color = primaryColor;
+      document.querySelectorAll('.subtitle, .question-text, .score-message').forEach(el => {
+        el.style.color = textColor;
+      });
+      document.querySelectorAll('.start-button, .next-button, .retry-button').forEach(btn => {
+        btn.style.background = primaryColor;
+      });
+      document.querySelector('.progress-fill').style.background = `linear-gradient(90deg, ${primaryColor}, ${secondaryColor})`;
+      document.querySelector('.score-display').style.color = primaryColor;
+      document.querySelector('.question-number').style.color = secondaryColor;
+    }
+
+    function showQuestion() {
+      const q = questions[currentQuestion];
+      document.getElementById('questionNumber').textContent = `Question ${currentQuestion + 1} of ${questions.length}`;
+      document.getElementById('questionText').textContent = q.question;
+      
+      const optionsContainer = document.getElementById('options');
+      optionsContainer.innerHTML = '';
+      
+      q.options.forEach((option, index) => {
+        const optionDiv = document.createElement('div');
+        optionDiv.className = 'option';
+        optionDiv.textContent = option;
+        optionDiv.onclick = () => selectOption(index);
+        optionsContainer.appendChild(optionDiv);
+      });
+
+      const progress = ((currentQuestion) / questions.length) * 100;
+      document.getElementById('progressFill').style.width = progress + '%';
+      
+      document.getElementById('feedback').classList.add('hidden');
+      nextButton.classList.remove('hidden');
+      answered = false;
+    }
+
+    function selectOption(selectedIndex) {
+      if (answered) return;
+      
+      const q = questions[currentQuestion];
+      const options = document.querySelectorAll('.option');
+      const feedback = document.getElementById('feedback');
+
+      if (selectedIndex === q.correct) {
+        answered = true;
+        options.forEach((option, index) => {
+          option.style.cursor = 'default';
+          if (index === q.correct) {
+            option.classList.add('correct');
+          }
+        });
+        score++;
+        feedback.className = 'feedback correct';
+        feedback.textContent = '✓ Correct! ' + q.explanation;
+        feedback.classList.remove('hidden');
+        nextButton.classList.remove('hidden');
+      } else {
+        options[selectedIndex].classList.add('incorrect');
+        feedback.className = 'feedback incorrect';
+        feedback.textContent = '✗ Incorrect. ' + q.explanation + ' Try selecting another answer!';
+        feedback.classList.remove('hidden');
+        nextButton.classList.add('hidden');
+      }
+    }
+
+    function nextQuestion() {
+      currentQuestion++;
+      if (currentQuestion < questions.length) {
+        showQuestion();
+      } else {
+        showResults();
+      }
+    }
+
+    function showResults() {
+      quizScreen.classList.add('hidden');
+      resultsScreen.classList.remove('hidden');
+      
+      const percentage = Math.round((score / questions.length) * 100);
+      document.getElementById('scoreDisplay').textContent = percentage + '%';
+      
+      let message = '';
+      if (percentage >= 90) {
+        message = '🎉 Outstanding! You have excellent understanding of forces!';
+      } else if (percentage >= 70) {
+        message = '👍 Great job! You have a solid grasp of the concepts!';
+      } else if (percentage >= 50) {
+        message = '👌 Good effort! Review the explanations to improve!';
+      } else {
+        message = '📚 Keep studying! Forces can be tricky but you\'ll get there!';
+      }
+      
+      document.getElementById('scoreMessage').textContent = message;
+      document.getElementById('correctCount').textContent = score;
+      document.getElementById('incorrectCount').textContent = questions.length - score;
+      document.getElementById('totalCount').textContent = questions.length;
+    }
+
+    function resetQuiz() {
+      currentQuestion = 0;
+      score = 0;
+      answered = false;
+      resultsScreen.classList.add('hidden');
+      startScreen.classList.remove('hidden');
+    }
+
+    startButton.onclick = () => {
+      startScreen.classList.add('hidden');
+      quizScreen.classList.remove('hidden');
+      showQuestion();
+    };
+
+    nextButton.onclick = nextQuestion;
+    retryButton.onclick = resetQuiz;
+
+    if (window.elementSdk) {
+      window.elementSdk.init({
+        defaultConfig,
+        onConfigChange,
+        mapToCapabilities: (config) => ({
+          recolorables: [
+            {
+              get: () => config.primary_color || defaultConfig.primary_color,
+              set: (value) => {
+                config.primary_color = value;
+                window.elementSdk.setConfig({ primary_color: value });
+              }
+            },
+            {
+              get: () => config.secondary_color || defaultConfig.secondary_color,
+              set: (value) => {
+                config.secondary_color = value;
+                window.elementSdk.setConfig({ secondary_color: value });
+              }
+            },
+            {
+              get: () => config.background_color || defaultConfig.background_color,
+              set: (value) => {
+                config.background_color = value;
+                window.elementSdk.setConfig({ background_color: value });
+              }
+            },
+            {
+              get: () => config.text_color || defaultConfig.text_color,
+              set: (value) => {
+                config.text_color = value;
+                window.elementSdk.setConfig({ text_color: value });
+              }
+            }
+          ],
+          borderables: [],
+          fontEditable: undefined,
+          fontSizeable: undefined
+        }),
+        mapToEditPanelValues: (config) => new Map([
+          ["quiz_title", config.quiz_title || defaultConfig.quiz_title],
+          ["subtitle", config.subtitle || defaultConfig.subtitle],
+          ["start_button_text", config.start_button_text || defaultConfig.start_button_text],
+          ["next_button_text", config.next_button_text || defaultConfig.next_button_text],
+          ["results_title", config.results_title || defaultConfig.results_title],
+          ["retry_button_text", config.retry_button_text || defaultConfig.retry_button_text]
+        ])
+      });
+    }
+  </script>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9a18e240e4bf9837',t:'MTc2MzY1MTUyNy4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
