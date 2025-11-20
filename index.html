@@ -31,7 +31,7 @@
       box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
     }
 
-    .start-screen, .quiz-screen, .results-screen {
+    .start-screen, .review-screen, .results-screen {
       text-align: center;
     }
 
@@ -204,10 +204,10 @@
  <body>
   <div class="container">
    <div id="startScreen" class="start-screen">
-    <h1 id="quizTitle">Forces Review</h1>
+    <h1 id="reviewTitle">Forces Review</h1>
     <p id="subtitle" class="subtitle">Test your understanding of gravity, normal force, tension, springs, and friction!</p><button id="startButton" class="start-button">Start</button>
    </div>
-   <div id="quizScreen" class="quiz-screen hidden">
+   <div id="reviewScreen" class="review-screen hidden">
     <div class="progress-bar">
      <div id="progressFill" class="progress-fill"></div>
     </div>
@@ -229,7 +229,7 @@
   </div>
   <script>
     const defaultConfig = {
-      quiz_title: "Forces Review",
+      review_title: "Forces Review",
       subtitle: "Test your understanding of gravity, normal force, tension, springs, and friction!",
       start_button_text: "Start",
       next_button_text: "Next Question",
@@ -800,14 +800,14 @@
     let answered = false;
 
     const startScreen = document.getElementById('startScreen');
-    const quizScreen = document.getElementById('quizScreen');
+    const reviewScreen = document.getElementById('reviewScreen');
     const resultsScreen = document.getElementById('resultsScreen');
     const startButton = document.getElementById('startButton');
     const nextButton = document.getElementById('nextButton');
     const retryButton = document.getElementById('retryButton');
 
     async function onConfigChange(config) {
-      document.getElementById('quizTitle').textContent = config.quiz_title || defaultConfig.quiz_title;
+      document.getElementById('reviewTitle').textContent = config.review_title || defaultConfig.review_title;
       document.getElementById('subtitle').textContent = config.subtitle || defaultConfig.subtitle;
       document.getElementById('startButton').textContent = config.start_button_text || defaultConfig.start_button_text;
       document.getElementById('nextButton').textContent = config.next_button_text || defaultConfig.next_button_text;
@@ -896,7 +896,7 @@
     }
 
     function showResults() {
-      quizScreen.classList.add('hidden');
+      reviewScreen.classList.add('hidden');
       resultsScreen.classList.remove('hidden');
       
       const percentage = Math.round((score / questions.length) * 100);
@@ -919,7 +919,7 @@
       document.getElementById('totalCount').textContent = questions.length;
     }
 
-    function resetQuiz() {
+    function resetreview() {
       currentQuestion = 0;
       score = 0;
       answered = false;
@@ -929,12 +929,12 @@
 
     startButton.onclick = () => {
       startScreen.classList.add('hidden');
-      quizScreen.classList.remove('hidden');
+      reviewScreen.classList.remove('hidden');
       showQuestion();
     };
 
     nextButton.onclick = nextQuestion;
-    retryButton.onclick = resetQuiz;
+    retryButton.onclick = resetreview;
 
     if (window.elementSdk) {
       window.elementSdk.init({
@@ -976,7 +976,7 @@
           fontSizeable: undefined
         }),
         mapToEditPanelValues: (config) => new Map([
-          ["quiz_title", config.quiz_title || defaultConfig.quiz_title],
+          ["review_title", config.review_title || defaultConfig.review_title],
           ["subtitle", config.subtitle || defaultConfig.subtitle],
           ["start_button_text", config.start_button_text || defaultConfig.start_button_text],
           ["next_button_text", config.next_button_text || defaultConfig.next_button_text],
